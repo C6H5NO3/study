@@ -1,0 +1,259 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{xeCJK}  % 中文支持
+\usepackage{amsmath,amsthm,amssymb}  % 数学包
+\usepackage{graphicx}  % 插入图片
+\usepackage{booktabs}  % 美化表格
+\usepackage{hyperref}  % 超链接
+\usepackage{enumitem}  % 自定义列表
+\usepackage[left=3.5cm,right=3cm,top=2cm,bottom=2cm]{geometry}  % 页面设置
+\usepackage{listings}
+\usepackage{color}
+ 
+\lstset{    
+ frame=none,                                          % 不显示背景边框
+ backgroundcolor=\color[RGB]{245,245,244},            % 设定背景颜色
+ keywordstyle=\color[RGB]{40,40,255},                 % 设定关键字颜色
+ numberstyle=\footnotesize\color{darkgray},           
+ commentstyle=\it\color[RGB]{0,96,96},                % 设置代码注释的格式
+ stringstyle=\rmfamily\slshape\color[RGB]{128,0,0},   % 设置字符串格式
+ showstringspaces=false,                              % 不显示字符串中的空格                                        % 设置语言
+}
+
+\begin{document}
+ 
+\section{baidu-serp-api}
+\subsection{安装}
+\begin{lstlisting}[language=bash]
+pip install baidu-serp-api
+\end{lstlisting}
+
+\subsection{使用}
+\begin{lstlisting}[language=python]
+from baidu_serp_api import BaiduPc
+import time
+
+pc_serp = BaiduPc()
+max_page = 10
+max_retry = 5
+page = 1
+retry = 0
+
+while page <= max_page:
+    try:
+        results = pc_serp.search('python', 
+            pn=page, 
+            exclude=['recommend', 'match_count'])
+        
+        if len(results['data']['results']) == 0:
+            if retry < max_retry:
+                retry += 1
+                time.sleep(5)
+                print(f'Retrying... ({retry}/{max_retry})')
+                continue
+            else:
+                print('Max retries reached. Exiting...')
+                break
+        
+        print(f'Page {page}')
+        for result in results['data']['results']:
+            print(result['title'])
+
+        if results['data']['last_page']:
+            break
+        page += 1
+        retry = 0
+        time.sleep(2)
+    except Exception as e:
+        retry += 1
+        print(f'Attempt {retry}/{max_retry} failed: {e}')
+        if retry < max_retry:
+            time.sleep(5)
+        else:
+            print('Max retries reached.')
+            break
+\end{lstlisting}
+
+\subsection{参数}
+\begin{itemize}
+    \item \verb|keyword|:搜索关键词
+    \item \verb|date_range|(可选):搜索日期范围,格式为\verb|'20250501,20250507'|
+    \item \verb|pn|(可选):搜索结果页码
+    \item \verb|proxies|(可选):代理设置
+    \item \verb|exclude|(可选):排除的结果类型
+\end{itemize}
+
+\subsection{返回结果}
+返回格式为\verb!dict[str, Any] | Any!
+\begin{itemize}
+    \item \verb|code|:请求状态
+    \item \verb|msg|:请求信息
+    \item \verb|data|:返回数据
+    \begin{itemize}
+        \item \verb|results|:搜索结果列表
+        \item \verb|recommend|:推荐相关搜索词
+        \item \verb|last_page|:是否为最后一页
+    \end{itemize}
+\end{itemize}
+
+\subsection{注意事项}
+\begin{itemize}
+    \item \textbf{请求速率}
+    
+    QPS约为0.1154,即每次请求间隔约为8.67秒.经常性返回空数据导致额外耗时
+    \item \textbf{语言设置}
+
+    默认为中文,无法设置其他语言
+    \item \textbf{代理设置}
+
+    \verb|pc_serp.search(...proxies={'http': 'http://yourproxy:port'})|
+\end{itemize}
+
+\subsection{官方文档}
+\url{https://github.com/ohblue/baidu-serp-api}
+
+\section{duckduckgo-search}
+\subsection{安装}
+\begin{lstlisting}[language=bash]
+pip install duckduckgo-search
+\end{lstlisting}
+
+\subsection{使用}
+\begin{lstlisting}[language=python]
+from duckduckgo_search import DDGS
+import time
+
+ddgs = DDGS(timeout=20)
+max_retry = 5
+
+retry = 0
+while retry < max_retry:
+    try:
+        results = ddgs.text('python', max_results=10)
+        for result in results:
+            print(result['title'])
+            print(result['href'])
+            print(result['body'])
+        time.sleep(2)
+        break
+    except Exception as e:
+        retry += 1
+        print(f"Attempt {retry}/{max_retry} failed: {e}")
+        time.sleep(5)
+        continue
+else:
+    print("Max retries reached.")
+\end{lstlisting}
+
+\subsection{参数}
+\begin{itemize}
+    \item \verb|keyword|:搜索关键词
+    \item \verb|max_results|(可选):最大返回结果数,若为\verb|None|,则仅返回第一个响应的结果,默认为\verb|None|
+    \item \verb|safe_search|(可选):安全搜索设置,默认为\verb|'moderate'|
+    \item \verb|region|(可选):地区,默认为\verb|'wt-wt'|
+    \item \verb|proxy|(可选):代理设置
+\end{itemize}
+
+\subsection{返回结果}
+返回格式为\verb|list[dict[str, Any]]|
+\begin{itemize}
+    \item \verb|title|:搜索结果标题
+    \item \verb|href|:搜索结果链接
+    \item \verb|body|:搜索结果摘要
+\end{itemize}
+
+\subsection{注意事项}
+\begin{itemize}
+    \item \textbf{请求速率}
+    
+    QPS约为0.2277,即每次请求间隔约为4.39秒.频繁使用会触发速率限制
+    \item \textbf{语言设置}
+    \begin{itemize}
+        \item \verb|region='wt-wt'|:默认语言
+        \item \verb|region='us-en'|:英文
+        \item \verb|region='cn-zh'|:中文
+    \end{itemize}
+    \item \textbf{代理设置}
+    
+    \verb|ddgs = DDGS(proxy='http://yourproxy:port')|
+\end{itemize}
+
+\subsection{官方文档}
+\url{https://github.com/deedy5/duckduckgo_search}
+
+\section{googlesearch}
+\subsection{安装}
+\begin{lstlisting}[language=bash]
+pip install googlesearch-python
+\end{lstlisting}
+
+\subsection{使用}
+\begin{lstlisting}[language=python]
+from googlesearch import search
+import time
+
+max_retry = 3
+retry = 0
+
+while retry < max_retry:
+    try:
+        results = search("python", 
+            num_results=10, 
+            advanced=True)
+        for result in results:
+            print(result.title)
+            print(result.url)
+            print(result.description)
+        break
+    except Exception as e:
+        retry += 1
+        print(f"Attempt {retry}/{max_retry} failed: {e}")
+        if retry < max_retry:
+            time.sleep(5)
+        else:
+            print("Max retries reached. Exiting...")
+\end{lstlisting}
+
+\subsection{参数}
+\begin{itemize}
+    \item \verb|keyword|:搜索关键词
+    \item \verb|num_results|(可选):最大返回结果数,默认为10
+    \item \verb|lang|(可选):语言设置,默认为\verb|"en"|
+    \item \verb|region|(可选):地区设置,默认为\verb|None|
+    \item \verb|safe|(可选):安全搜索设置,默认为\verb|"active"|
+    \item \verb|advanced|(可选):是否获取更多信息，若为\verb|False|则仅返回\verb|url|,默认为\verb|False|
+    \item \verb|proxy|(可选):代理设置
+    \item \verb|ssl_verify|(可选):是否验证SSL证书,默认为\verb|False|
+\end{itemize}
+
+\subsection{返回结果}
+返回结果为\verb!Generator[SearchResult | str, Any, None]!
+\begin{itemize}
+    \item \verb|title|:搜索结果标题
+    \item \verb|url|:搜索结果链接
+    \item \verb|description|:搜索结果摘要
+\end{itemize}
+
+\subsection{注意事项}
+\begin{itemize}
+    \item \textbf{请求速率}
+    
+    QPS约为1.0882,即每次请求间隔约为0.92秒.
+    \item \textbf{语言设置}
+    \begin{itemize}
+        \item \verb|lang='en'|:英文
+        \item \verb|lang='zh'|:中文
+    \end{itemize}
+    也可以修改地区设置
+    \begin{itemize}
+        \item \verb|region='us'|:美国
+        \item \verb|region='cn'|:中国
+    \end{itemize}
+    \item \textbf{代理设置}
+    
+    \verb|search('python', proxy='http://yourproxy:port')|
+\end{itemize}
+    
+\subsection{官方文档}
+\url{https://github.com/Nv7-GitHub/googlesearch}
+\end{document}
