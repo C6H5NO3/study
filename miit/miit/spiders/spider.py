@@ -24,8 +24,6 @@ class SpiderSpider(scrapy.Spider):
 
     def parse(self, response):
         self.driver.get(response.url)
-        # self.driver.get("http://httpbin.org/ip")
-        # logger.info(self.driver.page_source)
 
         page = 1
 
