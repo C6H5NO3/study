@@ -13,5 +13,5 @@ class ChemrxivItem(scrapy.Item):
     authors = scrapy.Field()
     abstract = scrapy.Field()
     date = scrapy.Field()
-    doi = scrapy.Field()
+    id = scrapy.Field()
     pass

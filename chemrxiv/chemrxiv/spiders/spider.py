@@ -8,7 +8,6 @@ class SpiderSpider(scrapy.Spider):
 
     def start_requests(self):
         url = "https://chemrxiv.org/engage/api-gateway/chemrxiv/graphql"
-        i = 0
 
         query = """
             query searchDashboardPageLoad(
@@ -47,49 +46,49 @@ class SpiderSpider(scrapy.Spider):
                     sortBy: $sortBy
                     includeBuckets: true
                     ) {
-                    totalCount
+                        totalCount
 
-                    results: itemHits {
-                        highlight {
-                        text
-                        matchPositions {
-                            start
-                            end
+                        results: itemHits {
+                            highlight {
+                                text
+                                matchPositions {
+                                    start
+                                    end
+                                }
+                            }
+
+                            item {
+                            ...itemMatchFragment
+                            }
                         }
+
+                        subjectBuckets {
+                            ...searchBucketFragment
                         }
 
-                        item {
-                        ...itemMatchFragment
+                        categoryBuckets {
+                            ...searchBucketFragment
                         }
-                    }
 
-                    subjectBuckets {
-                        ...searchBucketFragment
-                    }
+                        eventBuckets {
+                            ...searchBucketFragment
+                        }
 
-                    categoryBuckets {
-                        ...searchBucketFragment
-                    }
+                        partnerBuckets {
+                            ...searchBucketFragment
+                        }
 
-                    eventBuckets {
-                        ...searchBucketFragment
-                    }
+                        publishedDateBuckets {
+                            ...searchBucketFragment
+                        }
 
-                    partnerBuckets {
-                        ...searchBucketFragment
-                    }
+                        contentBuckets: contentTypeBuckets {
+                            ...searchBucketFragment
+                        }
 
-                    publishedDateBuckets {
-                        ...searchBucketFragment
-                    }
-
-                    contentBuckets: contentTypeBuckets {
-                        ...searchBucketFragment
-                    }
-
-                    dateBuckets: publishedDateBuckets {
-                        ...searchBucketFragment
-                    }
+                        dateBuckets: publishedDateBuckets {
+                            ...searchBucketFragment
+                        }
                     }
 
                     subjectTypes: subjects {
@@ -107,136 +106,135 @@ class SpiderSpider(scrapy.Spider):
             }
 
             fragment userRoleFragment on User {
-            __typename
-            id
-            sessionExpiresAt
-            titleTypeId: title
-            firstName
-            lastName
-            emailAddress: email
-            orcid
-            roles
-            accountType
+                __typename
+                id
+                sessionExpiresAt
+                titleTypeId: title
+                firstName
+                lastName
+                emailAddress: email
+                orcid
+                roles
+                accountType
             }
 
             fragment itemMatchFragment on MainItem {
-            __typename
-            id
-            title
-            abstract
-            keywords
-            origin
-            version
-            publishedDate
-            submittedDate
-            subjectType: subject {
-                ...subjectTypeFragment
-            }
-            contentType {
-                ...contentTypeFragment
-            }
-            categoryTypes: categories {
-                ...categoryTypeFragment
-            }
-            mainCategory {
-                name
-            }
-            asset {
-                mimeType
-                original {
-                url
-                }
-            }
-            authors {
-                title
-                firstName
-                lastName
-                authorConfirmationId
-                displayOrder
-            }
-            metrics {
-                metricType
-                description
-                value
-                unit
-            }
-            citationsCount
-            community {
+                __typename
                 id
-                name
-            }
+                title
+                abstract
+                keywords
+                origin
+                version
+                publishedDate
+                submittedDate
+                subjectType: subject {
+                    ...subjectTypeFragment
+                }
+                contentType {
+                    ...contentTypeFragment
+                }
+                categoryTypes: categories {
+                    ...categoryTypeFragment
+                }
+                mainCategory {
+                    name
+                }
+                asset {
+                    mimeType
+                    original {
+                    url
+                    }
+                }
+                authors {
+                    title
+                    firstName
+                    lastName
+                    authorConfirmationId
+                    displayOrder
+                }
+                metrics {
+                    metricType
+                    description
+                    value
+                    unit
+                }
+                citationsCount
+                community {
+                    id
+                    name
+                }
             }
 
             fragment searchBucketFragment on SearchBucket {
-            __typename
-            count
-            key
-            label
+                __typename
+                count
+                key
+                label
             }
 
             fragment subjectTypeFragment on Subject {
-            __typename
-            id
-            name
-            description
+                __typename
+                id
+                name
+                description
             }
 
             fragment contentTypeFragment on ContentType {
-            __typename
-            id
-            name
-            allowSubmission
-            allowJournalSubmission
-            allowCommunitySubmission
-            allowResearchDirectionSubmission
-            videoAllowedCheck
-            allowedFileTypes
-            allowedVideoFileTypes
+                __typename
+                id
+                name
+                allowSubmission
+                allowJournalSubmission
+                allowCommunitySubmission
+                allowResearchDirectionSubmission
+                videoAllowedCheck
+                allowedFileTypes
+                allowedVideoFileTypes
             }
 
             fragment categoryTypeFragment on Category {
-            __typename
-            id
-            name
-            description
-            parentId
+                __typename
+                id
+                name
+                description
+                parentId
             }
 
         """
-        while i <= 100:
-            payload = {
-                "operationName": "searchDashboardPageLoad",
-                "variables": {
-                    "text": "electrolyte",
-                    "sortBy": "PUBLISHED_DATE_DESC",
-                    "skip": i,
-                    "authors": "",
-                    "categories": [],
-                    "contents": [],
-                    "events": [],
-                    "publishedDates": [],
-                    "subjects": [],
-                    "partners": [],
-                    "keywords": []
-                },
-                "query": query
-            }
-            yield scrapy.Request(
-                url=url,
-                method="POST",
-                body=json.dumps(payload),
-                headers = {
-                    "Content-Type": "application/json",
-                    "x-api-key": "y6nWHrymZysXc",
-                    "x-apollo-operation-name": "searchDashboardPageLoad",
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0"
-                },
-                callback=self.parse
-            )
-            i += 10
+
+        payload = {
+            "operationName": "searchDashboardPageLoad",
+            "variables": {
+                "text": "electrolyte",
+                "sortBy": "PUBLISHED_DATE_DESC",
+                "skip": 0,
+                "authors": "",
+                "categories": [],
+                "contents": [],
+                "events": [],
+                "publishedDates": [],
+                "subjects": [],
+                "partners": [],
+                "keywords": []
+            },
+            "query": query
+        }
+        yield scrapy.Request(
+            url=url,
+            method="POST",
+            body=json.dumps(payload),
+            headers = {
+                "Content-Type": "application/json",
+                "x-api-key": "y6nWHrymZysXc",
+                "x-apollo-operation-name": "searchDashboardPageLoad",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0"
+            },
+            callback=self.parse,
+            meta={"skip": 0, "query": query}
+        )
 
     def parse(self, response):
-        print(response.text)  # 调试用
         data = json.loads(response.text)
         results = (
             data.get("data", {})
@@ -254,5 +252,37 @@ class SpiderSpider(scrapy.Spider):
             ]
             item["abstract"] = item_data.get("abstract")
             item["date"] = item_data.get("publishedDate")
-            item["doi"] = item_data.get("id")  # 假设ID作为DOI
+            item["id"] = item_data.get("id")
             yield item
+
+        search_items = data.get("data", {}).get("viewer", {}).get("searchItems", {})
+        total_count = search_items.get("totalCount", 0)
+        limit = 10
+        skip = response.meta["skip"]
+        if skip + limit < total_count:
+            skip += limit
+            payload = {
+                "operationName": "searchDashboardPageLoad",
+                "variables": {
+                    "text": "electrolyte",
+                    "sortBy": "PUBLISHED_DATE_DESC",
+                    "skip": skip,
+                    "authors": "",
+                    "categories": [],
+                    "contents": [],
+                    "events": [],
+                    "publishedDates": [],
+                    "subjects": [],
+                    "partners": [],
+                    "keywords": []
+                },
+                "query": response.meta["query"]
+            }
+            yield scrapy.Request(
+                url=response.url,
+                method="POST",
+                body=json.dumps(payload),
+                headers=response.request.headers,
+                callback=self.parse,
+                meta={"skip": skip, "query": response.meta["query"]}
+            )
